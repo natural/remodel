@@ -1,4 +1,4 @@
-
+inflection = require 'inflection'
 
 # create and return a riak connection
 exports.connection = ->
@@ -31,20 +31,60 @@ nativeTypes = [
   ]
 
 
-exports.BaseSchema = class BaseSchema
-  @_registry = {}
+exports.registry = registry = {}
 
-  @create: (props, callback)->
+
+exports.BaseSchema = class BaseSchema
+  @create: (props)->
     inst = new @
+    inst._meta = @_meta
+    inst._vclock = null
+
     for key, attr of @_attributes
       inst[key] = attr.default
-    keys = Object.keys @_attributes
+    inst._paths = keys = Object.keys @_attributes
+
     for key, value of props when key in keys
       inst[key] = value
-    callback null, inst
+
+    inst
+
+  @get: (key, callback)->
+    self = @
+    con = @_meta.connection
+    if not con
+      return callback 'not connected'
+    con.get {bucket:@_meta.bucket, key:key}, (response)->
+      if not response
+        callback 'not found'
+      else
+        props = JSON.parse response.content[0].value
+        vclock = response.vclock.toString 'base64'
+        inst = self.create props
+        inst.vclock = vclock
+        callback null, inst
+
+  toJSON: ->
+    data = {}
+    for key in @_paths
+      data[key] = @[key]
+    data
 
   save: (options, callback)->
-    null
+    con = @_meta.connection
+    if not con
+      return callback 'not connected'
+
+    obj =
+      bucket: @_meta.bucket
+      content:
+        content_type: 'application/json'
+        value: JSON.stringify @
+
+    con.put obj, (response)->
+      if response.errmsg
+        return callback response.errmsg+''
+      callback null, response.key+''
 
 
 normalizeAttr = (attr)->
@@ -59,6 +99,7 @@ normalizeAttr = (attr)->
 exports.schema = (defn)->
   defn = defn or {}
   name = defn.name
+
   if not name
     throw new TypeError 'Schema name required'
 
@@ -66,13 +107,20 @@ exports.schema = (defn)->
   methods = defn.methods or {}
   statics = defn.statics or {}
   attrs = defn.attributes or {}
+  bucket = defn.bucket
+  bucket = inflection.pluralize name.toLowerCase() if not bucket
 
   # TODO: virtuals
   # TODO: middleware
   # TODO: plugins
 
   class Schema extends BaseSchema
+    @_meta:
+      connection: defn.connection or null
+      bucket: bucket
+
     @_attributes: {}
+
 
   for key, value of statics
     Schema[key] = value
@@ -84,5 +132,5 @@ exports.schema = (defn)->
     Schema._attributes[key] = normalizeAttr value
 
   Schema._name = defn.name
-  Schema._registry[defn.name] = Schema
+  registry[defn.name] = Schema
   Schema

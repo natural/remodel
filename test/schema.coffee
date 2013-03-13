@@ -1,6 +1,6 @@
 assert = require 'assert'
 zukai = require '../lib'
-
+riakpbc = require 'riakpbc'
 
 describe 'Schema', ->
   describe 'constructor', ->
@@ -17,7 +17,7 @@ describe 'Schema', ->
       assert Foo._name == 'foo'
 
     it 'should register the schema', ->
-      'foo' in zukai.BaseSchema._registry
+      'foo' in zukai.registry
 
   describe 'static methods', ->
     it 'should have a known static method', ->
@@ -39,14 +39,14 @@ describe 'Schema', ->
             @
       assert Other.foo() == Other
 
-  describe 'instance methods', ->
-    it 'should have a known instance method', ->
+  describe 'schema instance', ->
+    it 'should have a known method', ->
       Some = zukai.schema
         name: 'Some'
       x = new Some
       assert x.save
 
-    it 'should have a specified instance method', ->
+    it 'should have a specified method', ->
       Again = zukai.schema
         name: 'Again'
         methods:
@@ -62,3 +62,71 @@ describe 'Schema', ->
             @
       x = new More
       assert x.yup() == x
+
+    it 'should have a method that can access the class', ->
+      Bore = zukai.schema
+        name: 'Bore'
+        connection: 3
+        methods:
+          check: ->
+            @_meta
+      x = Bore.create {}
+      assert x.check()
+
+
+    it 'should provide a default bucket name', ->
+      Score = zukai.schema
+        name: 'score'
+      assert Score._meta.bucket == 'scores'
+
+    it 'should allow a provided bucket name', ->
+      bucket = 'the_doors_suck'
+      Door = zukai.schema
+        name: 'door'
+        bucket: bucket
+      assert Door._meta.bucket == bucket
+
+
+  describe 'saving model objects', ->
+    it 'should indicate an error when connection is missing', (done)->
+      Core = zukai.schema
+        name: 'core'
+        attributes:
+          name: String
+      c = Core.create name:'coar'
+      assert c
+      c.save {}, (err, doc)->
+        assert err
+        assert not doc
+        done()
+
+
+    it 'should work when connection is present', (done)->
+      Lore = zukai.schema
+        name: 'lore'
+        connection: riakpbc.createClient()
+        attributes:
+          name: String
+      c = Lore.create name:'loar'
+      assert c
+      c.save {}, (err, doc)->
+        assert not err
+        assert doc
+        done()
+
+  describe 'getting model objects by key', ->
+    it 'should work when connection is present', (done)->
+      Gore = zukai.schema
+        name: 'gore'
+        connection: riakpbc.createClient()
+        attributes:
+          name: String
+      c = Gore.create name:'goar'
+      c.save {}, (err, key)->
+        assert not err
+        assert key
+        Gore.get key, (err, doc)->
+          assert not err
+          assert doc
+          assert doc.name == 'goar'
+          done()

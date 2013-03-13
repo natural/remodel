@@ -4,7 +4,8 @@
   "description": "Riak ODM for Node.js",
   "main": "index.js",
   "scripts": {
-    "test": "./node_modules/mocha/bin/mocha --compilers coffee:coffee-script --reporter spec ./test/"
+    "test": "./node_modules/mocha/bin/mocha --compilers coffee:coffee-script --reporter spec ./test/",
+    "prepublish": "./node_modules/coffee-script/bin/coffee -c  -o ./dist/ ./lib/*.coffee"
   },
   "repository": {
     "type": "git",
@@ -24,6 +25,7 @@
     "mocha": "~1.8.2"
   },
   "dependencies": {
-    "riakpbc": "0.0.7"
+    "riakpbc": "0.0.7",
+    "inflection": "~1.2.5"
   }
 }
