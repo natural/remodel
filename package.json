@@ -1,0 +1,29 @@
+{
+  "name": "zukai",
+  "version": "0.0.1",
+  "description": "Riak ODM for Node.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "./node_modules/mocha/bin/mocha --compilers coffee:coffee-script --reporter spec ./test/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/natural/zukai.git"
+  },
+  "keywords": [
+    "riak",
+    "odm",
+    "model",
+    "schema"
+  ],
+  "author": "Troy Melhase",
+  "license": "MIT",
+  "readmeFilename": "README.md",
+  "devDependencies": {
+    "coffee-script": "~1.6.1",
+    "mocha": "~1.8.2"
+  },
+  "dependencies": {
+    "riakpbc": "0.0.7"
+  }
+}
