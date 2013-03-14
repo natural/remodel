@@ -37,27 +37,32 @@ exports.registry = registry = {}
 exports.BaseSchema = class BaseSchema
   @create: (props)->
     inst = new @
-    inst._meta = @_meta
-    inst._vclock = null
+    inst.bucket = @bucket
+    inst.connection = @connection
+    inst.vclock = inst.key = null
+    inst.doc = {}
 
-    for key, attr of @_attributes
-      inst[key] = attr.default
-    inst._paths = keys = Object.keys @_attributes
+    keys = Object.keys @fields
+
+    for key in keys
+      inst.doc[key] = @fields[key].default
 
     for key, value of props when key in keys
-      inst[key] = value
+      inst.doc[key] = value
 
     inst
 
   @get: (key, callback)->
     self = @
-    con = @_meta.connection
+    con = @connection
     if not con
       return callback 'not connected'
-    con.get {bucket:@_meta.bucket, key:key}, (response)->
+    con.get bucket:@bucket, key:key, (response)->
       if not response
         callback 'not found'
       else
+        if not response.content
+          return callback null, null
         props = JSON.parse response.content[0].value
         vclock = response.vclock.toString 'base64'
         inst = self.create props
@@ -65,18 +70,23 @@ exports.BaseSchema = class BaseSchema
         callback null, inst
 
   toJSON: ->
-    data = {}
-    for key in @_paths
-      data[key] = @[key]
-    data
+    @doc
+
+  del: (callback)->
+    con = @connection
+    if not con
+      return callback 'not connected'
+    con.del bucket:@bucket, key:@key, (res)->
+      callback null, null
 
   save: (options, callback)->
-    con = @_meta.connection
+    self = @
+    con = @connection
     if not con
       return callback 'not connected'
 
     obj =
-      bucket: @_meta.bucket
+      bucket: @bucket
       content:
         content_type: 'application/json'
         value: JSON.stringify @
@@ -84,7 +94,9 @@ exports.BaseSchema = class BaseSchema
     con.put obj, (response)->
       if response.errmsg
         return callback response.errmsg+''
+      self.key = response.key+''
       callback null, response.key+''
+
 
 
 normalizeAttr = (attr)->
@@ -106,7 +118,7 @@ exports.schema = (defn)->
   props = defn.properties or {}
   methods = defn.methods or {}
   statics = defn.statics or {}
-  attrs = defn.attributes or {}
+  attrs = defn.fields or {}
   bucket = defn.bucket
   bucket = inflection.pluralize name.toLowerCase() if not bucket
 
@@ -115,11 +127,12 @@ exports.schema = (defn)->
   # TODO: plugins
 
   class Schema extends BaseSchema
-    @_meta:
-      connection: defn.connection or null
-      bucket: bucket
+    @connection: defn.connection or null
+    @bucket: bucket
+    @fields: {}
+    @modelName = name
 
-    @_attributes: {}
+
 
 
   for key, value of statics
@@ -128,9 +141,8 @@ exports.schema = (defn)->
   for key, value of methods
     Schema.prototype[key] = value
 
-  for key, value of attrs
-    Schema._attributes[key] = normalizeAttr value
+  for key, def of attrs
+    Schema.fields[key] = normalizeAttr def
 
-  Schema._name = defn.name
-  registry[defn.name] = Schema
+  registry[name] = Schema
   Schema

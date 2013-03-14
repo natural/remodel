@@ -13,8 +13,7 @@ describe 'Schema', ->
 
     it 'should function with only a name key', ->
       Foo = zukai.schema name:'foo'
-      assert Foo
-      assert Foo._name == 'foo'
+      assert Foo.modelName == 'foo'
 
     it 'should register the schema', ->
       'foo' in zukai.registry
@@ -69,7 +68,7 @@ describe 'Schema', ->
         connection: 3
         methods:
           check: ->
-            @_meta
+            @bucket
       x = Bore.create {}
       assert x.check()
 
@@ -77,21 +76,21 @@ describe 'Schema', ->
     it 'should provide a default bucket name', ->
       Score = zukai.schema
         name: 'score'
-      assert Score._meta.bucket == 'scores'
+      assert Score.bucket == 'scores'
 
     it 'should allow a provided bucket name', ->
       bucket = 'the_doors_suck'
       Door = zukai.schema
         name: 'door'
         bucket: bucket
-      assert Door._meta.bucket == bucket
+      assert Door.bucket == bucket
 
 
   describe 'saving model objects', ->
     it 'should indicate an error when connection is missing', (done)->
       Core = zukai.schema
         name: 'core'
-        attributes:
+        fields:
           name: String
       c = Core.create name:'coar'
       assert c
@@ -105,7 +104,7 @@ describe 'Schema', ->
       Lore = zukai.schema
         name: 'lore'
         connection: riakpbc.createClient()
-        attributes:
+        fields:
           name: String
       c = Lore.create name:'loar'
       assert c
@@ -114,19 +113,30 @@ describe 'Schema', ->
         assert doc
         done()
 
-  describe 'getting model objects by key', ->
-    it 'should work when connection is present', (done)->
-      Gore = zukai.schema
-        name: 'gore'
-        connection: riakpbc.createClient()
-        attributes:
-          name: String
-      c = Gore.create name:'goar'
-      c.save {}, (err, key)->
+  describe 'working with model objects by key', ->
+    key = model = null
+    Gore = zukai.schema
+      name: 'gore'
+      connection: riakpbc.createClient()
+      fields:
+        name: String
+
+    it 'should allow Schema.get', (done)->
+      model = Gore.create name:'goar'
+      model.save {}, (err, k)->
         assert not err
-        assert key
-        Gore.get key, (err, doc)->
+        assert k
+        Gore.get k, (err, doc)->
           assert not err
           assert doc
-          assert doc.name == 'goar'
+          assert doc.doc.name == 'goar'
+          key = k
+          done()
+
+    it 'should allow model.del', (done)->
+      model.del (err, key)->
+        assert not err
+        Gore.get key, (err, doc)->
+          assert not err
+          assert not doc
           done()
