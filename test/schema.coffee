@@ -2,6 +2,7 @@ assert = require 'assert'
 zukai = require '../lib'
 riakpbc = require 'riakpbc'
 
+
 describe 'Schema', ->
   describe 'constructor', ->
     it 'should require a name', ->
