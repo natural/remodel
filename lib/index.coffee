@@ -76,15 +76,18 @@ exports.BaseSchema = class BaseSchema
     con = @connection
     if not con
       return callback 'not connected'
+    if not @key
+      return callback 'no key'
     con.del bucket:@bucket, key:@key, (res)->
       callback null, null
 
   save: (options, callback)->
+    if typeof options == 'function'
+      callback = options
     self = @
     con = @connection
     if not con
       return callback 'not connected'
-
     obj =
       bucket: @bucket
       content:
@@ -131,9 +134,6 @@ exports.schema = (defn)->
     @bucket: bucket
     @fields: {}
     @modelName = name
-
-
-
 
   for key, value of statics
     Schema[key] = value
