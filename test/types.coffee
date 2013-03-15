@@ -38,3 +38,23 @@ describe 'Types', ->
           kind: {type: String, default:'cup'}
       a = Dish.create kind:'plate'
       assert a.doc.kind == 'plate'
+
+
+  describe 'Date', ->
+    it 'should be allowed as a direct field type', ->
+      now = new Date
+      Egg = zukai.schema
+        name: 'egg'
+        fields:
+          laid: Date
+      a = Egg.create laid:now
+      assert a.doc.laid == now
+
+    it 'should be allowed as a field type', ->
+      now = new Date
+      Fish = zukai.schema
+        name: 'fish'
+        fields:
+          born: {type: Date, default:null}
+      a = Fish.create born:now
+      assert a.doc.born == now
