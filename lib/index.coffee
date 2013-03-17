@@ -42,7 +42,10 @@ exports.BaseSchema = class BaseSchema
     keys = Object.keys @fields
 
     for key in keys
-      inst.doc[key] = @fields[key].default
+      def = @fields[key].default
+      if typeof def == 'function'
+        def = def()
+      inst.doc[key] = def
 
     for key, value of props when key in keys
       inst.doc[key] = value
@@ -81,7 +84,6 @@ exports.BaseSchema = class BaseSchema
         if response.errmsg
           callback response.errmsg+''
         else
-          #console.log response.docs[0]
           callback null, response
 
   @mapred: (options, callback)->
@@ -177,12 +179,9 @@ exports.schema = (defn)->
   methods = defn.methods or {}
   statics = defn.statics or {}
   attrs = defn.fields or {}
+
   bucket = defn.bucket
   bucket = inflection.pluralize name.toLowerCase() if not bucket
-
-  # TODO: virtuals
-  # TODO: middleware
-  # TODO: plugins
 
   class Schema extends BaseSchema
     @connection: defn.connection or null
@@ -200,4 +199,3 @@ exports.schema = (defn)->
     Schema.fields[key] = normalizeAttr def
 
   registry[name] = Schema
-  Schema
