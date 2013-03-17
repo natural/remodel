@@ -9,9 +9,6 @@ instances = {}
 describe 'Search', ->
   describe 'basic query', ->
     it 'should return expected results', (done)->
-      if process.env.TRAVIS
-        return done()
-
       Model = zukai.schema
         name: 'search-check'
         connection: riakpbc.createClient()
@@ -19,24 +16,37 @@ describe 'Search', ->
           name: String
           age: Number
 
-      instance = Model.create name:'alice', age:21
-      assert instance.doc.name == 'alice'
+      # this should turn into an 'ensure index' method
+      # on models.
+      request =
+        bucket: Model.bucket
+        props:
+          precommit: [
+            mod: 'riak_search_kv_hook'
+            fun: 'precommit'
+            ]
 
-      instance.save (err, k)->
-        assert k
-        instances[k] = instance
+      Model.connection.setBucket request, (reply)->
+        assert not reply.errmsg
 
-        inst = Model.create name:'bob', age:34
-        assert inst.doc.name == 'bob'
-        inst.save (err, k)->
+        instance = Model.create name:'alice', age:21
+        assert instance.doc.name == 'alice'
+
+        instance.save (err, k)->
           assert k
-          instances[k] = inst
+          instances[k] = instance
 
-          Model.search 'name:alice', (err, res)->
-            if err
-              console.log err
-            assert not err
-            #console.log res
+          inst = Model.create name:'bob', age:34
+          assert inst.doc.name == 'bob'
+          inst.save (err, k)->
+            assert k
+            instances[k] = inst
 
-            instance.del ->
-              inst.del done
+            Model.search 'name:alice', (err, res)->
+              if err
+                console.log err
+              assert not err
+              #console.log res
+
+              instance.del ->
+                inst.del done

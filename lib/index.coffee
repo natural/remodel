@@ -72,6 +72,7 @@ exports.BaseSchema = class BaseSchema
     con = @connection
     if not con
       return callback errmsg:'not connected'
+
     q = if options.q then options.q else options
     con.search index:self.bucket, q:q, (response)->
       if not response
@@ -80,7 +81,7 @@ exports.BaseSchema = class BaseSchema
         if response.errmsg
           callback response.errmsg+''
         else
-          console.log response.docs[0]
+          #console.log response.docs[0]
           callback null, response
 
   @mapred: (options, callback)->
