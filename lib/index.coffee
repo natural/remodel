@@ -83,7 +83,6 @@ exports.BaseSchema = class BaseSchema
           console.log response.docs[0]
           callback null, response
 
-
   @mapred: (options, callback)->
     if not @connection
       return callback errmsg:'not connected'
