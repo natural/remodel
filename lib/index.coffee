@@ -67,6 +67,23 @@ exports.BaseSchema = class BaseSchema
         inst.vclock = vclock
         callback null, inst
 
+  @search: (options, callback)->
+    self = @
+    con = @connection
+    if not con
+      return callback errmsg:'not connected'
+    q = if options.q then options.q else options
+    con.search index:self.bucket, q:q, (response)->
+      if not response
+        callback null, null
+      else
+        if response.errmsg
+          callback response.errmsg+''
+        else
+          console.log response.docs[0]
+          callback null, response
+
+
   @mapred: (options, callback)->
     if not @connection
       return callback errmsg:'not connected'
