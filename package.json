@@ -4,7 +4,7 @@
   "description": "Riak ODM for Node.js",
   "main": "index.js",
   "scripts": {
-    "test": "./node_modules/mocha/bin/mocha --compilers coffee:coffee-script --reporter spec ./test/",
+    "test": "cd ./test && make",
     "prepublish": "./node_modules/coffee-script/bin/coffee -c  -o ./dist/ ./lib/*.coffee"
   },
   "repository": {

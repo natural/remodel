@@ -1,8 +1,5 @@
+require './Object.observe/Object.observe.poly'
 inflection = require 'inflection'
-
-# create and return a riak connection
-exports.connection = ->
-  null
 
 
 # add a plugin for all schemas
@@ -56,10 +53,11 @@ exports.BaseSchema = class BaseSchema
     self = @
     con = @connection
     if not con
-      return callback 'not connected'
+      return callback errmsg:'not connected'
+
     con.get bucket:@bucket, key:key, (response)->
       if not response
-        callback 'not found'
+        callback errmsg:'not found'
       else
         if not response.content
           return callback null, null
@@ -69,15 +67,55 @@ exports.BaseSchema = class BaseSchema
         inst.vclock = vclock
         callback null, inst
 
+  @mapred: (options, callback)->
+    if not @connection
+      return callback errmsg:'not connected'
+
+    options = options or {}
+    map = options.map or (v)->
+      [key:v.key]
+
+    red = options.reduce or (values, arg)->
+      values
+
+    m0 =
+      map:
+        name: 'Riak.mapValuesJson'
+        language: 'javascript'
+        keep: true
+
+    m1 =
+      map:
+        source: map.toString()
+        language: 'javascript'
+        keep: true
+
+    r1 =
+      reduce:
+        source: red.toString()
+        language: 'javascript'
+
+    req =
+      content_type: 'application/json'
+      request: JSON.stringify
+        inputs: @bucket
+        query: [m1, m0, r1]
+
+    @connection.mapred req, (res)->
+      if res.errmsg
+        callback res.errmsg+''
+      else
+        callback null, res
+
   toJSON: ->
     @doc
 
   del: (callback)->
     con = @connection
     if not con
-      return callback 'not connected'
+      return callback errmsg:'not connected'
     if not @key
-      return callback 'no key'
+      return callback errmsg:'no key'
     con.del bucket:@bucket, key:@key, (res)->
       callback null, null
 
@@ -87,7 +125,7 @@ exports.BaseSchema = class BaseSchema
     self = @
     con = @connection
     if not con
-      return callback 'not connected'
+      return callback errmsg:'not connected'
     obj =
       bucket: @bucket
       content:

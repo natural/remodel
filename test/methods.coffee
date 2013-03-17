@@ -44,3 +44,8 @@ describe 'Methods', ->
           assert not err
           assert not instance
           done()
+
+  describe 'toJSON', ->
+    it 'should return the document', ->
+      assert instance.toJSON().val == instance.doc.val
+      assert instance.toJSON() == instance.doc
