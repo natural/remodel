@@ -12,9 +12,11 @@ describe 'Map Reduce', ->
       Model = zukai.schema
         name: 'mapred-check'
         connection: riakpbc.createClient()
-        fields:
-          name: String
-          age: Number
+        properties:
+          name:
+            type: 'string'
+          age:
+            type: 'number'
 
       instance = Model.create name:'alice', age:21
       assert instance.doc.name == 'alice'

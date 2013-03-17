@@ -1,6 +1,6 @@
 require './Object.observe/Object.observe.poly'
 inflection = require 'inflection'
-
+jsonschema = require 'jsonschema'
 
 # add a plugin for all schemas
 exports.plugin = ->
@@ -32,23 +32,27 @@ exports.registry = registry = {}
 
 
 exports.BaseSchema = class BaseSchema
-  @create: (props)->
+  @create: (doc)->
     inst = new @
     inst.bucket = @bucket
     inst.connection = @connection
     inst.vclock = inst.key = null
     inst.doc = {}
 
-    keys = Object.keys @fields
+    # jsonschema should handle this; figure out how or when
+    for name, prop of @properties
+      if not doc[name]?
+        def = prop.default
+        if typeof def == 'function'
+          def = def()
+        doc[name] = def
 
-    for key in keys
-      def = @fields[key].default
-      if typeof def == 'function'
-        def = def()
-      inst.doc[key] = def
-
-    for key, value of props when key in keys
-      inst.doc[key] = value
+    res = jsonschema.validate doc, properties:@properties
+    if not res.length
+      inst.invalid = false
+      inst.doc = doc
+    else
+      inst.invalid = res
 
     inst
 
@@ -178,7 +182,7 @@ exports.schema = (defn)->
   props = defn.properties or {}
   methods = defn.methods or {}
   statics = defn.statics or {}
-  attrs = defn.fields or {}
+  attrs = defn.properties or {}
 
   bucket = defn.bucket
   bucket = inflection.pluralize name.toLowerCase() if not bucket
@@ -186,7 +190,7 @@ exports.schema = (defn)->
   class Schema extends BaseSchema
     @connection: defn.connection or null
     @bucket: bucket
-    @fields: {}
+    @properties: {}
     @modelName = name
 
   for key, value of statics
@@ -196,6 +200,6 @@ exports.schema = (defn)->
     Schema.prototype[key] = value
 
   for key, def of attrs
-    Schema.fields[key] = normalizeAttr def
+    Schema.properties[key] = normalizeAttr def
 
   registry[name] = Schema

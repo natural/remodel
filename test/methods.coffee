@@ -11,8 +11,9 @@ describe 'Methods', ->
       Model = zukai.schema
         name: 'method-check'
         connection: riakpbc.createClient()
-        fields:
-          val: Number
+        properties:
+          val:
+            type: 'number'
       instance = Model.create val:0
       assert instance.doc.val == 0
 

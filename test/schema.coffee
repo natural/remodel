@@ -91,8 +91,9 @@ describe 'Schema', ->
     it 'should indicate an error when connection is missing', (done)->
       Core = zukai.schema
         name: 'core'
-        fields:
-          name: String
+        properties:
+          name:
+            type: 'string'
       c = Core.create name:'coar'
       assert c
       c.save {}, (err, doc)->
@@ -105,8 +106,9 @@ describe 'Schema', ->
       Lore = zukai.schema
         name: 'lore'
         connection: riakpbc.createClient()
-        fields:
-          name: String
+        properties:
+          name:
+            type: 'string'
       c = Lore.create name:'loar'
       assert c
       c.save {}, (err, doc)->
@@ -119,8 +121,9 @@ describe 'Schema', ->
     Gore = zukai.schema
       name: 'gore'
       connection: riakpbc.createClient()
-      fields:
-        name: String
+      properties:
+        name:
+          type: 'string'
 
     it 'should allow Schema.get', (done)->
       model = Gore.create name:'goar'

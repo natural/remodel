@@ -27,6 +27,7 @@
   "dependencies": {
     "riakpbc": "0.0.7",
     "inflection": "~1.2.5",
-    "underscore": "~1.4.4"
+    "underscore": "~1.4.4",
+    "jsonschema": "~0.3.2"
   }
 }

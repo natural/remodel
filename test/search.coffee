@@ -12,9 +12,11 @@ describe 'Search', ->
       Model = zukai.schema
         name: 'search-check'
         connection: riakpbc.createClient()
-        fields:
-          name: String
-          age: Number
+        properties:
+          name:
+            type: 'string'
+          age:
+            type: 'number'
 
       # this should turn into an 'ensure index' method
       # on models.
