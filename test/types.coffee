@@ -1,6 +1,8 @@
+_ = require 'underscore'
 assert = require 'assert'
-zukai = require '../lib'
 riakpbc = require 'riakpbc'
+
+zukai = require '../lib'
 
 
 describe 'Types', ->
@@ -111,3 +113,37 @@ describe 'Types', ->
         assert a.doc.born.getTime() > sometime.getTime()
         done()
       setTimeout later, 10
+
+
+  describe 'Array', ->
+    it 'should be allowed as a direct field type', ->
+      Gumdrop = zukai.schema
+        name: 'gumdrop'
+        fields:
+          ingredients: Array
+      a = Gumdrop.create ingredients:['sugar', 'dye']
+      assert a.doc.ingredients.length == 2
+
+    it 'should be allowed as a field type', ->
+      Honey = zukai.schema
+        name: 'honey'
+        fields:
+          hives: {type: Array, default:[]}
+      a = Honey.create hives:[1,2,3]
+      assert a.doc.hives.length == 3
+
+    it 'should use the default value when not specified', ->
+      Jam = zukai.schema
+        name: 'jam'
+        fields:
+          sizes: {type: Array, default:[4,5,6,7]}
+      a = Jam.create {}
+      assert _.isEqual, a.doc.sizes, [4,5,6,7]
+
+    it 'should use the default callable when not specified', ->
+      Kite = zukai.schema
+        name: 'kite'
+        fields:
+          points: {type: Array, default:->[8,9,10,11,12]}
+      a = Kite.create {}
+      assert _.isEqual, a.doc.points, [8,9,10,11,12]
