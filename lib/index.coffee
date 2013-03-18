@@ -7,28 +7,16 @@ exports.plugin = ->
   null
 
 
-connectionEvents =
-  connecting: 1
-  connected: 2
-  open: 3
-  disconnecting: 4
-  disconnected: 5
-  close: 6
-  reconnected: 7
-  error: 8
-
-
-nativeTypes = [
-  Array
-  Boolean
-  Date
-  Number
-  Object
-  String
-  ]
+applyDefaults = (properties, doc)->
+  for name, prop of properties
+    if not doc[name]?
+      def = prop.default
+      def = def() if typeof def == 'function'
+      doc[name] = def
 
 
 exports.registry = registry = {}
+
 
 
 exports.BaseSchema = class BaseSchema
@@ -37,22 +25,18 @@ exports.BaseSchema = class BaseSchema
     inst.bucket = @bucket
     inst.connection = @connection
     inst.vclock = inst.key = null
-    inst.doc = {}
 
-    # jsonschema should handle this; figure out how or when
-    for name, prop of @properties
-      if not doc[name]?
-        def = prop.default
-        if typeof def == 'function'
-          def = def()
-        doc[name] = def
+
+    applyDefaults @properties, doc
 
     res = jsonschema.validate doc, properties:@properties
     if not res.length
       inst.invalid = false
       inst.doc = doc
     else
+      console.log 'invalid', res
       inst.invalid = res
+      inst.doc = {}
 
     inst
 
@@ -163,13 +147,6 @@ exports.BaseSchema = class BaseSchema
 
 
 
-normalizeAttr = (attr)->
-  typ = nativeTypes.filter ((t)-> attr == t)
-  if typ.length
-    attr = {type:typ[0]}
-  if not attr.default
-    attr.default = null
-  attr
 
 
 exports.schema = (defn)->
@@ -182,7 +159,6 @@ exports.schema = (defn)->
   props = defn.properties or {}
   methods = defn.methods or {}
   statics = defn.statics or {}
-  attrs = defn.properties or {}
 
   bucket = defn.bucket
   bucket = inflection.pluralize name.toLowerCase() if not bucket
@@ -190,7 +166,7 @@ exports.schema = (defn)->
   class Schema extends BaseSchema
     @connection: defn.connection or null
     @bucket: bucket
-    @properties: {}
+    @properties: defn.properties
     @modelName = name
 
   for key, value of statics
@@ -198,8 +174,5 @@ exports.schema = (defn)->
 
   for key, value of methods
     Schema.prototype[key] = value
-
-  for key, def of attrs
-    Schema.properties[key] = normalizeAttr def
 
   registry[name] = Schema
