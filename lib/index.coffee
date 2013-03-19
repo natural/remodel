@@ -33,8 +33,9 @@ exports.BaseSchema = class BaseSchema
   @create: (doc)->
     inst = new @
     inst.table = @table
+    inst.db = @db
     inst.connection = @connection
-    inst.vclock = inst.key = null
+    inst.key = null
 
     applyDefaults @properties, doc
 
@@ -54,7 +55,7 @@ exports.BaseSchema = class BaseSchema
     if not con
       return callback errmsg:'not connected'
 
-    rdb.table(@table).get(key).run con, (err, doc)->
+    rdb.db(@db).table(@table).get(key).run con, (err, doc)->
       if err
         return callback err
       if not doc
@@ -67,7 +68,7 @@ exports.BaseSchema = class BaseSchema
     if not con
       return callback errmsg:'not connected'
     q = if options.q then options.q else options
-    rdb.table(@table).filter(q).run con, callback
+    rdb.db(@db).table(@table).filter(q).run con, callback
 
   toJSON: ->
     @doc
@@ -78,7 +79,7 @@ exports.BaseSchema = class BaseSchema
       return callback errmsg:'not connected'
     if not @key
       return callback errmsg:'no key'
-    rdb.table(@table).get(@key).delete().run con, callback
+    rdb.db(@db).table(@table).get(@key).delete().run con, callback
 
   save: (options, callback)->
     if typeof options == 'function'
@@ -87,7 +88,7 @@ exports.BaseSchema = class BaseSchema
     con = @connection
     if not con
       return callback errmsg:'not connected'
-    rdb.table(@table).insert(@doc).run con, (err, doc)->
+    rdb.db(@db).table(@table).insert(@doc).run con, (err, doc)->
       if err
         return callback err
       key = doc.generated_keys[0]
