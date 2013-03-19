@@ -1,6 +1,8 @@
-require './Object.observe/Object.observe.poly'
 inflection = require 'inflection'
 jsonschema = require 'jsonschema'
+rdb = require 'rethinkdb'
+observe = require './Object.observe/Object.observe.poly'
+
 
 # add a plugin for all schemas
 exports.plugin = ->
@@ -18,14 +20,21 @@ applyDefaults = (properties, doc)->
 exports.registry = registry = {}
 
 
-
 exports.BaseSchema = class BaseSchema
+  @createTable: (callback)->
+    rdb.db(@db).tableCreate(@table).run @connection, callback
+
+  @dropTable: (callback)->
+    rdb.db(@db).tableDrop(@table).run @connection, callback
+
+  @clearTable: (callback)->
+    rdb.db(@db).table(@table).delete().run @connection, callback
+
   @create: (doc)->
     inst = new @
-    inst.bucket = @bucket
+    inst.table = @table
     inst.connection = @connection
     inst.vclock = inst.key = null
-
 
     applyDefaults @properties, doc
 
@@ -34,7 +43,6 @@ exports.BaseSchema = class BaseSchema
       inst.invalid = false
       inst.doc = doc
     else
-      console.log 'invalid', res
       inst.invalid = res
       inst.doc = {}
 
@@ -46,73 +54,20 @@ exports.BaseSchema = class BaseSchema
     if not con
       return callback errmsg:'not connected'
 
-    con.get bucket:@bucket, key:key, (response)->
-      if not response
-        callback errmsg:'not found'
-      else
-        if not response.content
-          return callback null, null
-        props = JSON.parse response.content[0].value
-        vclock = response.vclock.toString 'base64'
-        inst = self.create props
-        inst.vclock = vclock
-        callback null, inst
+    rdb.table(@table).get(key).run con, (err, doc)->
+      if err
+        return callback err
+      if not doc
+        return callback null, null
+      callback null, self.create doc
 
   @search: (options, callback)->
     self = @
     con = @connection
     if not con
       return callback errmsg:'not connected'
-
     q = if options.q then options.q else options
-    con.search index:self.bucket, q:q, (response)->
-      if not response
-        callback null, null
-      else
-        if response.errmsg
-          callback response.errmsg+''
-        else
-          callback null, response
-
-  @mapred: (options, callback)->
-    if not @connection
-      return callback errmsg:'not connected'
-
-    options = options or {}
-    map = options.map or (v)->
-      [key:v.key]
-
-    red = options.reduce or (values, arg)->
-      values
-
-    m0 =
-      map:
-        name: 'Riak.mapValuesJson'
-        language: 'javascript'
-        keep: true
-
-    m1 =
-      map:
-        source: map.toString()
-        language: 'javascript'
-        keep: true
-
-    r1 =
-      reduce:
-        source: red.toString()
-        language: 'javascript'
-
-    req =
-      content_type: 'application/json'
-      request: JSON.stringify
-        inputs: @bucket
-        query: [m1, m0, r1]
-
-    @connection.mapred req, (res)->
-      if res.errmsg
-        callback res.errmsg+''
-      else
-        callback null, res
+    rdb.table(@table).filter(q).run con, callback
 
   toJSON: ->
     @doc
@@ -123,8 +78,7 @@ exports.BaseSchema = class BaseSchema
       return callback errmsg:'not connected'
     if not @key
       return callback errmsg:'no key'
-    con.del bucket:@bucket, key:@key, (res)->
-      callback null, null
+    rdb.table(@table).get(@key).delete().run con, callback
 
   save: (options, callback)->
     if typeof options == 'function'
@@ -133,20 +87,12 @@ exports.BaseSchema = class BaseSchema
     con = @connection
     if not con
       return callback errmsg:'not connected'
-    obj =
-      bucket: @bucket
-      content:
-        content_type: 'application/json'
-        value: JSON.stringify @
-
-    con.put obj, (response)->
-      if response.errmsg
-        return callback response.errmsg+''
-      self.key = response.key+''
-      callback null, response.key+''
-
-
-
+    rdb.table(@table).insert(@doc).run con, (err, doc)->
+      if err
+        return callback err
+      key = doc.generated_keys[0]
+      self.key = key
+      return callback null, self
 
 
 exports.schema = (defn)->
@@ -156,17 +102,21 @@ exports.schema = (defn)->
   if not name
     throw new TypeError 'Schema name required'
 
+  db = defn.db or 'test'
   props = defn.properties or {}
   methods = defn.methods or {}
   statics = defn.statics or {}
+  connection = defn.connection or null
+  properties = defn.properties or {}
 
-  bucket = defn.bucket
-  bucket = inflection.pluralize name.toLowerCase() if not bucket
+  table = defn.table
+  table = inflection.pluralize name.toLowerCase() if not table
 
   class Schema extends BaseSchema
-    @connection: defn.connection or null
-    @bucket: bucket
-    @properties: defn.properties
+    @connection: connection
+    @table: table
+    @db: db
+    @properties: properties
     @modelName = name
 
   for key, value of statics

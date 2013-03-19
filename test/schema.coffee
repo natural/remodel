@@ -1,38 +1,47 @@
 assert = require 'assert'
-zukai = require '../lib'
-riakpbc = require 'riakpbc'
+{connect} = require 'rethinkdb'
+{schema, registry} = require '../lib'
+
+Model = instance =connection = null
 
 
 describe 'Schema', ->
+  before (done)->
+    connect 'localhost', (err, con)->
+      assert not err
+      assert con
+      connection = con
+      done()
+
   describe 'constructor', ->
     it 'should require a name', ->
       try
-        zukai.schema()
+        schema()
         assert 0
       catch err
         assert err.message == 'Schema name required'
 
     it 'should function with only a name key', ->
-      Foo = zukai.schema name:'foo'
+      Foo = schema name:'foo'
       assert Foo.modelName == 'foo'
 
     it 'should register the schema', ->
-      'foo' in zukai.registry
+      'foo' in registry
 
   describe 'static methods', ->
     it 'should have a known static method', ->
-      Bar = zukai.schema name:'bar'
+      Bar = schema name:'bar'
       assert Bar.create?
 
     it 'should have a specified static method', ->
-      Other = zukai.schema
+      Other = schema
         name: 'other'
         statics:
           foo: ->
       assert Other.foo
 
     it 'should have a specified static with correct `this`', ->
-      Other = zukai.schema
+      Other = schema
         name: 'other'
         statics:
           foo: ->
@@ -41,13 +50,13 @@ describe 'Schema', ->
 
   describe 'schema instance', ->
     it 'should have a known method', ->
-      Some = zukai.schema
+      Some = schema
         name: 'Some'
       x = new Some
       assert x.save
 
     it 'should have a specified method', ->
-      Again = zukai.schema
+      Again = schema
         name: 'Again'
         methods:
           check: ->
@@ -55,7 +64,7 @@ describe 'Schema', ->
       assert x.check
 
     it 'should have a specified method with correct `this`', ->
-      More = zukai.schema
+      More = schema
         name: 'More'
         methods:
           yup: ->
@@ -64,32 +73,31 @@ describe 'Schema', ->
       assert x.yup() == x
 
     it 'should have a method that can access the class', ->
-      Bore = zukai.schema
+      Bore = schema
         name: 'Bore'
-        connection: 3
         methods:
           check: ->
-            @bucket
+            true
       x = Bore.create {}
       assert x.check()
 
 
-    it 'should provide a default bucket name', ->
-      Score = zukai.schema
+    it 'should provide a default table name', ->
+      Score = schema
         name: 'score'
-      assert Score.bucket == 'scores'
+      assert Score.table == 'scores'
 
-    it 'should allow a provided bucket name', ->
-      bucket = 'the_doors_suck'
-      Door = zukai.schema
+    it 'should allow a provided table name', ->
+      table = 'the_doors_suck'
+      Door = schema
         name: 'door'
-        bucket: bucket
-      assert Door.bucket == bucket
+        table: table
+      assert Door.table == table
 
 
   describe 'saving model objects', ->
     it 'should indicate an error when connection is missing', (done)->
-      Core = zukai.schema
+      Core = schema
         name: 'core'
         properties:
           name:
@@ -103,44 +111,46 @@ describe 'Schema', ->
 
 
     it 'should work when connection is present', (done)->
-      Lore = zukai.schema
+      assert connection
+      Lore = schema
         name: 'lore'
-        connection: riakpbc.createClient()
+        connection: connection
         properties:
           name:
             type: 'string'
       c = Lore.create name:'loar'
-      assert c
-      c.save {}, (err, doc)->
-        assert not err
-        assert doc
-        done()
-
-  describe 'working with model objects by key', ->
-    key = model = null
-    Gore = zukai.schema
-      name: 'gore'
-      connection: riakpbc.createClient()
-      properties:
-        name:
-          type: 'string'
-
-    it 'should allow Schema.get', (done)->
-      model = Gore.create name:'goar'
-      model.save {}, (err, k)->
-        assert not err
-        assert k
-        Gore.get k, (err, doc)->
+      #rdb.db('test').tableCreate(c.table).run connection, (err, what)->
+      Lore.createTable ->
+        c.save {}, (err, doc)->
           assert not err
           assert doc
-          assert doc.doc.name == 'goar'
-          key = k
           done()
 
-    it 'should allow model.del', (done)->
-      model.del (err, key)->
-        assert not err
-        Gore.get key, (err, doc)->
+  describe 'working with model objects by key', ->
+    it 'should allow Schema.get', (done)->
+      Model = schema
+        name: 'gore'
+        connection: connection
+        properties:
+          name:
+            type: 'string'
+
+      Model.createTable (err)->
+        instance = Model.create name:'goar'
+        instance.save {}, (err, inst)->
           assert not err
-          assert not doc
+          assert inst
+          Model.get inst.key, (err, doc)->
+            assert not err
+            assert doc
+            assert doc.doc.name == 'goar'
+            done()
+
+    it 'should allow instance.del', (done)->
+      instance.del (err, msg)->
+        assert not err
+        Model.get instance.key, (err, doc)->
+          assert not err
+          if doc
+            assert doc.deleted == 1
           done()

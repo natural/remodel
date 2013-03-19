@@ -1,54 +1,44 @@
 assert = require 'assert'
-zukai = require '../lib'
-riakpbc = require 'riakpbc'
+{connect} = require 'rethinkdb'
+{schema} = require '../lib'
 
-Model = instance = null
-instances = {}
+
+Model = null
 
 
 describe 'Search', ->
-  describe 'basic query', ->
-    it 'should return expected results', (done)->
-      Model = zukai.schema
-        name: 'search-check'
-        connection: riakpbc.createClient()
+  before (done)->
+    connect 'localhost', (err, con)->
+      assert not err
+
+      Model = schema
+        name: 'searchcheck'
+        table: 'test'
+        connection: con
         properties:
           name:
             type: 'string'
           age:
             type: 'number'
 
-      # this should turn into an 'ensure index' method
-      # on models.
-      request =
-        bucket: Model.bucket
-        props:
-          precommit: [
-            mod: 'riak_search_kv_hook'
-            fun: 'precommit'
-            ]
+      Model.clearTable done
 
-      Model.connection.setBucket request, (reply)->
-        assert not reply.errmsg
+  describe 'basic query', ->
+    it 'should return expected results', (done)->
+      alice = Model.create name:'alice', age:21
+      assert alice.doc.name == 'alice'
 
-        instance = Model.create name:'alice', age:21
-        assert instance.doc.name == 'alice'
+      alice.save (err, inst1)->
+        assert inst1
 
-        instance.save (err, k)->
-          assert k
-          instances[k] = instance
+        bob = Model.create name:'bob', age:34
+        assert bob.doc.name == 'bob'
 
-          inst = Model.create name:'bob', age:34
-          assert inst.doc.name == 'bob'
-          inst.save (err, k)->
-            assert k
-            instances[k] = inst
+        bob.save (err, inst2)->
+          assert inst2
 
-            Model.search 'name:alice', (err, res)->
-              if err
-                console.log err
-              assert not err
-              #console.log res
-
-              instance.del ->
-                inst.del done
+          Model.search name:'bob', (err, cursor)->
+            assert not err
+            cursor.toArray (err, res)->
+              assert res.length == 1
+              done()
