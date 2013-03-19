@@ -5,6 +5,6 @@ node_js:
 before_install:
   - git submodule update --init --recursive
   - sudo apt-get install -qq software-properties-common
-  - sudo add-apt-repository ppa:rethinkdb/ppa
+  - echo 'yes' | sudo add-apt-repository ppa:rethinkdb/ppa
   - sudo apt-get update
   - sudo apt-get install rethinkdb
