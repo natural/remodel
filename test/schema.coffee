@@ -119,7 +119,6 @@ describe 'Schema', ->
           name:
             type: 'string'
       c = Lore.create name:'loar'
-      #rdb.db('test').tableCreate(c.table).run connection, (err, what)->
       Lore.createTable ->
         c.save {}, (err, doc)->
           assert not err

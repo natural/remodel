@@ -13,7 +13,6 @@ describe 'Search', ->
 
       Model = schema
         name: 'searchcheck'
-        table: 'test'
         connection: con
         properties:
           name:
@@ -21,7 +20,8 @@ describe 'Search', ->
           age:
             type: 'number'
 
-      Model.clearTable done
+      Model.createTable ->
+        Model.clearTable done
 
   describe 'basic query', ->
     it 'should return expected results', (done)->
