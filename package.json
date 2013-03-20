@@ -1,15 +1,15 @@
 {
-  "name": "zukai",
+  "name": "remodel",
   "version": "0.0.1",
   "description": "RethinkDB ODM for Node.js",
   "main": "index.js",
   "scripts": {
     "test": "cd ./test && make",
-    "prepublish": "./node_modules/coffee-script/bin/coffee -c  -o ./dist/ ./lib/*.coffee"
+    "prepublish": "./node_modules/coffee-script/bin/coffee -c  -o ./lib/ ./lib/*.coffee"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/natural/zukai.git"
+    "url": "git://github.com/natural/remodel.git"
   },
   "keywords": [
     "rethinkdb",
