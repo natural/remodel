@@ -40,12 +40,12 @@ exports.BaseSchema = class BaseSchema
     applyDefaults @properties, doc
 
     res = jsonschema.validate doc, properties:@properties
-    if not res.length
-      inst.invalid = false
-      inst.doc = doc
-    else
+    if res.errors.length
       inst.invalid = res
       inst.doc = {}
+    else
+      inst.invalid = false
+      inst.doc = doc
 
     inst
 
@@ -63,7 +63,6 @@ exports.BaseSchema = class BaseSchema
       callback null, self.create doc
 
   @search: (options, callback)->
-    self = @
     con = @connection
     if not con
       return callback errmsg:'not connected'
@@ -127,3 +126,12 @@ exports.schema = (defn)->
     Schema.prototype[key] = value
 
   registry[name] = Schema
+
+
+exports.walk = walk = (obj, callback, predicate)->
+  predicate = (->true) if not predicate
+  for key, val of obj
+    if predicate key, val
+      callback key, val
+      if typeof val == 'object'
+        walk val, callback, predicate
