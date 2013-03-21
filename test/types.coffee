@@ -1,6 +1,6 @@
 assert = require 'assert'
 {isEqual} = require 'underscore'
-{schema} = require '../lib'
+{schema} = require '../src'
 
 
 describe 'Types', ->

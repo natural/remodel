@@ -1,6 +1,6 @@
 assert = require 'assert'
 {isEqual} = require 'underscore'
-{walk} = require '../lib'
+{walk} = require '../src'
 
 
 describe 'Utilities', ->

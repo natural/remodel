@@ -1,6 +1,6 @@
 assert = require 'assert'
 #{connect} = require 'rethinkdb'
-{schema} = require '../lib'
+{schema} = require '../src'
 
 
 

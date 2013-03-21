@@ -1,6 +1,6 @@
 assert = require 'assert'
 {connect} = require 'rethinkdb'
-{schema, registry} = require '../lib'
+{schema, registry} = require '../src'
 
 Model = instance =connection = null
 
