@@ -99,9 +99,10 @@ describe 'Schema', ->
     it 'should indicate an error when connection is missing', (done)->
       Core = schema
         name: 'core'
-        properties:
-          name:
-            type: 'string'
+        schema:
+          properties:
+            name:
+              type: 'string'
       c = Core.create name:'coar'
       assert c
       c.save {}, (err, doc)->
@@ -115,9 +116,10 @@ describe 'Schema', ->
       Lore = schema
         name: 'lore'
         connection: connection
-        properties:
-          name:
-            type: 'string'
+        schema:
+          properties:
+            name:
+              type: 'string'
       c = Lore.create name:'loar'
       Lore.createTable ->
         c.save {}, (err, doc)->
@@ -130,9 +132,10 @@ describe 'Schema', ->
       Model = schema
         name: 'gore'
         connection: connection
-        properties:
-          name:
-            type: 'string'
+        schema:
+          properties:
+            name:
+              type: 'string'
 
       Model.createTable (err)->
         instance = Model.create name:'goar'

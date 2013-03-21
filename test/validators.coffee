@@ -10,10 +10,11 @@ describe 'Validators', ->
   describe 'minimum', ->
     Model = schema
       name: 'minimumCheck'
-      properties:
-        val:
-          type: 'number'
-          minimum: 5
+      schema:
+        properties:
+          val:
+            type: 'number'
+            minimum: 5
 
     it 'should validate when valid', (done)->
       assert Model
@@ -32,11 +33,12 @@ describe 'Validators', ->
   describe 'exclusive minimum', ->
     Model = schema
       name: 'exclusiveMinimumCheck'
-      properties:
-        val:
-          type: 'number'
-          minimum: 5
-          exclusiveMinimum: true
+      schema:
+        properties:
+          val:
+            type: 'number'
+            minimum: 5
+            exclusiveMinimum: true
 
     it 'should validate when valid', (done)->
       assert Model
@@ -55,10 +57,11 @@ describe 'Validators', ->
   describe 'maximum', ->
     Model = schema
       name: 'maximumCheck'
-      properties:
-        val:
-          type: 'number'
-          maximum: 5
+      schema:
+        properties:
+          val:
+            type: 'number'
+            maximum: 5
 
     it 'should validate when valid', (done)->
       assert Model
@@ -77,11 +80,12 @@ describe 'Validators', ->
   describe 'exclusive maximum', ->
     Model = schema
       name: 'exclusiveMaximumCheck'
-      properties:
-        val:
-          type: 'number'
-          maximum: 25
-          exclusiveMaximum: true
+      schema:
+        properties:
+          val:
+            type: 'number'
+            maximum: 25
+            exclusiveMaximum: true
 
     it 'should validate when valid', (done)->
       assert Model
@@ -100,10 +104,11 @@ describe 'Validators', ->
   describe 'divisibleBy', ->
     Model = schema
       name: 'divisibleByCheck'
-      properties:
-        val:
-          type: 'number'
-          divisibleBy: 5
+      schema:
+        properties:
+          val:
+            type: 'number'
+            divisibleBy: 5
 
     it 'should validate when valid', (done)->
       assert Model
@@ -122,10 +127,11 @@ describe 'Validators', ->
   describe 'required', ->
     Model = schema
       name: 'requiredCheck'
-      properties:
-        val:
-          type: 'number'
-          required: true
+      schema:
+        properties:
+          val:
+            type: 'number'
+            required: true
 
     it 'should validate when valid', (done)->
       assert Model
@@ -144,10 +150,11 @@ describe 'Validators', ->
   describe 'pattern', ->
     Model = schema
       name: 'patternCheck'
-      properties:
-        val:
-          type: 'string'
-          pattern: /\d\d\d/
+      schema:
+        properties:
+          val:
+            type: 'string'
+            pattern: /\d\d\d/
 
     it 'should validate when valid', (done)->
       assert Model
@@ -168,10 +175,11 @@ describe 'Validators', ->
     # checking one and assuming that the others will work as advertised.
     Model = schema
       name: 'formatCheck'
-      properties:
-        val:
-          type: 'string'
-          format: 'ip-address'
+      schema:
+        properties:
+          val:
+            type: 'string'
+            format: 'ip-address'
 
     it 'should validate when valid', (done)->
       assert Model
@@ -190,10 +198,11 @@ describe 'Validators', ->
   describe 'minLength', ->
     Model = schema
       name: 'minLengthCheck'
-      properties:
-        val:
-          type: 'string'
-          minLength: 3
+      schema:
+        properties:
+          val:
+            type: 'string'
+            minLength: 3
 
     it 'should validate when valid', (done)->
       assert Model
@@ -212,10 +221,11 @@ describe 'Validators', ->
   describe 'maxLength', ->
     Model = schema
       name: 'maxLengthCheck'
-      properties:
-        val:
-          type: 'string'
-          maxLength: 4
+      schema:
+        properties:
+          val:
+            type: 'string'
+            maxLength: 4
 
     it 'should validate when valid', (done)->
       assert Model
@@ -234,10 +244,11 @@ describe 'Validators', ->
   describe 'minItems', ->
     Model = schema
       name: 'minItemsCheck'
-      properties:
-        val:
-          type: 'array'
-          minItems: 3
+      schema:
+        properties:
+          val:
+            type: 'array'
+            minItems: 3
 
     it 'should validate when valid', (done)->
       assert Model
@@ -256,10 +267,11 @@ describe 'Validators', ->
   describe 'maxItems', ->
     Model = schema
       name: 'maxItemsCheck'
-      properties:
-        val:
-          type: 'array'
-          maxItems: 4
+      schema:
+        properties:
+          val:
+            type: 'array'
+            maxItems: 4
 
     it 'should validate when valid', (done)->
       assert Model
@@ -278,10 +290,11 @@ describe 'Validators', ->
   describe 'uniqueItems', ->
     Model = schema
       name: 'uniqueItemsCheck'
-      properties:
-        val:
-          type: 'array'
-          uniqueItems: true
+      schema:
+        properties:
+          val:
+            type: 'array'
+            uniqueItems: true
 
     it 'should validate when valid', (done)->
       assert Model
@@ -300,10 +313,11 @@ describe 'Validators', ->
   describe 'enum', ->
     Model = schema
       name: 'enumCheck'
-      properties:
-        val:
-          type: 'string'
-          enum: ['eggs', 'ham']
+      schema:
+        properties:
+          val:
+            type: 'string'
+            enum: ['eggs', 'ham']
 
     it 'should validate when valid', (done)->
       assert Model
@@ -322,10 +336,11 @@ describe 'Validators', ->
   describe 'disallow', ->
     Model = schema
       name: 'disallowCheck'
-      properties:
-        val:
-          type: 'any'
-          disallow: ['number', 'date']
+      schema:
+        properties:
+          val:
+            type: 'any'
+            disallow: ['number', 'date']
 
     it 'should validate when valid', (done)->
       assert Model
@@ -348,16 +363,17 @@ describe 'Validators', ->
   describe 'dependencies', ->
     Model = schema
       name: 'dependenciesCheck'
-      properties:
-        val:
-          type: 'object'
-          dependencies:
-            id: 'f'
-            properties:
-              a:
-                type: 'string'
-              b:
-                type: 'string'
+      schema:
+        properties:
+          val:
+            type: 'object'
+            dependencies:
+              id: 'f'
+              properties:
+                a:
+                  type: 'string'
+                b:
+                  type: 'string'
 
 
     it 'should validate when valid', (done)->
@@ -372,6 +388,30 @@ describe 'Validators', ->
       instance = Model.create val:{a:1, b:false}
       console.log instance.invalid, instance.doc
       assert instance.invalid
+      done()
+
+  describe 'allOf', ->
+    Model = schema
+      name: 'allOfCheck'
+      schema:
+        properties:
+          val:
+            allOf: [
+              {properties: bar:{type:'integer'}, required: ['bar']}
+              {properties: foo:{type:'string'}, required: ['foo']}
+              ]
+
+    it 'should validate when valid', (done)->
+      assert Model
+      instance = Model.create val:{bar:1, foo:'yes'}
+      assert instance.doc
+      assert not instance.invalid
+      done()
+
+    it 'should not validate when invalid', (done)->
+      assert Model
+      instance = Model.create val:{bar:3}
+      #assert instance.invalid
       done()
 
 # no tests in json-schema for these, and like the dependencies validator, haven't

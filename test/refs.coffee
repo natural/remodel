@@ -13,35 +13,38 @@ describe 'References', ->
       Employee = schema
         name: 'employee'
         connection: con
-        properties:
-          displayName:
-            type: 'string'
-          badge:
-            type: 'badge'
-            maxItems: 1
-            minItems: 1
-          computers:
-            type: 'computer'
+        schema:
+          properties:
+            displayName:
+              type: 'string'
+            badge:
+              type: 'badge'
+              maxItems: 1
+              minItems: 1
+            computers:
+              type: 'computer'
 
       Badge = schema
         name: 'badge'
         connection: con
-        properties:
-          badgeId:
-            type: 'string'
-          employeeId:
-            type: 'employee'
+        schema:
+          properties:
+            badgeId:
+              type: 'string'
+            employeeId:
+              type: 'employee'
 
       Computer = schema
         name: 'computer'
         connection: con
-        properties:
-          make:
-            type: 'string'
-          model:
-            type: 'string'
-          cpus:
-            type: 'int'
+        schema:
+          properties:
+            make:
+              type: 'string'
+            model:
+              type: 'string'
+            cpus:
+              type: 'int'
 
       badge = Badge.create badgeId:'a-9-b-4'
       iris = Computer.create make:'SGI', model:'Iris', cpus:16

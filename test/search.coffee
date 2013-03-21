@@ -14,11 +14,12 @@ describe 'Search', ->
       Model = schema
         name: 'searchcheck'
         connection: con
-        properties:
-          name:
-            type: 'string'
-          age:
-            type: 'number'
+        schema:
+          properties:
+            name:
+              type: 'string'
+            age:
+              type: 'number'
 
       Model.createTable ->
         Model.clearTable done

@@ -13,9 +13,10 @@ describe 'Methods', ->
         Model = schema
           name: 'methodcheck'
           connection: con
-          properties:
-            val:
-              type: 'number'
+          schema:
+            properties:
+              val:
+                type: 'number'
 
         Model.createTable (err)->
           instance = Model.create val:0

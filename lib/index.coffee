@@ -9,8 +9,8 @@ exports.plugin = ->
   null
 
 
-applyDefaults = (properties, doc)->
-  for name, prop of properties
+applyDefaults = (schema, doc)->
+  for name, prop of schema.properties
     if not doc[name]?
       def = prop.default
       def = def() if typeof def == 'function'
@@ -37,9 +37,9 @@ exports.BaseSchema = class BaseSchema
     inst.connection = @connection
     inst.key = null
 
-    applyDefaults @properties, doc
+    applyDefaults @schema, doc
 
-    res = jsonschema.validate doc, properties:@properties
+    res = jsonschema.validate doc, @schema
     if res.errors.length
       inst.invalid = res
       inst.doc = {}
@@ -103,11 +103,10 @@ exports.schema = (defn)->
     throw new TypeError 'Schema name required'
 
   db = defn.db or 'test'
-  props = defn.properties or {}
   methods = defn.methods or {}
   statics = defn.statics or {}
   connection = defn.connection or null
-  properties = defn.properties or {}
+  schema = defn.schema or {}
 
   table = defn.table
   table = inflection.pluralize name.toLowerCase() if not table
@@ -116,7 +115,7 @@ exports.schema = (defn)->
     @connection: connection
     @table: table
     @db: db
-    @properties: properties
+    @schema: schema
     @modelName = name
 
   for key, value of statics
