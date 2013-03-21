@@ -1,11 +1,11 @@
 {
   "name": "remodel",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "RethinkDB ODM for Node.js",
   "main": "lib/index.js",
   "scripts": {
     "test": "cd ./test && make",
-    "prepublish": "./node_modules/coffee-script/bin/coffee -c  -o ./lib/ ./src/*.coffee"
+    "prepublish": "./node_modules/coffee-script/bin/coffee -c  -o ./lib/ ./src/*.coffee && cp -r ./src/Object.observe ./lib/"
   },
   "repository": {
     "type": "git",
