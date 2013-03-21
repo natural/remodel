@@ -1,6 +1,6 @@
 {
   "name": "remodel",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "RethinkDB ODM for Node.js",
   "main": "lib/index.js",
   "scripts": {
