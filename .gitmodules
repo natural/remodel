@@ -1,3 +1,0 @@
-[submodule "lib/Object.observe"]
-	path = lib/Object.observe
-	url = git://github.com/jdarling/Object.observe.git
