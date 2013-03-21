@@ -22,18 +22,18 @@ exports.registry = registry = {}
 
 exports.BaseSchema = class BaseSchema
   @createTable: (callback)->
-    rdb.db(@db).tableCreate(@table).run @connection, callback
+    rdb.db(@database).tableCreate(@table).run @connection, callback
 
   @dropTable: (callback)->
-    rdb.db(@db).tableDrop(@table).run @connection, callback
+    rdb.db(@database).tableDrop(@table).run @connection, callback
 
   @clearTable: (callback)->
-    rdb.db(@db).table(@table).delete().run @connection, callback
+    rdb.db(@database).table(@table).delete().run @connection, callback
 
   @create: (doc)->
     inst = new @
     inst.table = @table
-    inst.db = @db
+    inst.database = @database
     inst.connection = @connection
     inst.key = null
 
@@ -55,7 +55,7 @@ exports.BaseSchema = class BaseSchema
     if not con
       return callback errmsg:'not connected'
 
-    rdb.db(@db).table(@table).get(key).run con, (err, doc)->
+    rdb.db(@database).table(@table).get(key).run con, (err, doc)->
       if err
         return callback err
       if not doc
@@ -67,7 +67,7 @@ exports.BaseSchema = class BaseSchema
     if not con
       return callback errmsg:'not connected'
     q = if options.q then options.q else options
-    rdb.db(@db).table(@table).filter(q).run con, callback
+    rdb.db(@database).table(@table).filter(q).run con, callback
 
   toJSON: ->
     @doc
@@ -78,7 +78,7 @@ exports.BaseSchema = class BaseSchema
       return callback errmsg:'not connected'
     if not @key
       return callback errmsg:'no key'
-    rdb.db(@db).table(@table).get(@key).delete().run con, callback
+    rdb.db(@database).table(@table).get(@key).delete().run con, callback
 
   save: (options, callback)->
     if typeof options == 'function'
@@ -87,7 +87,7 @@ exports.BaseSchema = class BaseSchema
     con = @connection
     if not con
       return callback errmsg:'not connected'
-    rdb.db(@db).table(@table).insert(@doc).run con, (err, doc)->
+    rdb.db(@database).table(@table).insert(@doc).run con, (err, doc)->
       if err
         return callback err
       key = doc.generated_keys[0]
@@ -102,26 +102,20 @@ exports.schema = (defn)->
   if not name
     throw new TypeError 'Schema name required'
 
-  db = defn.db or 'test'
-  methods = defn.methods or {}
-  statics = defn.statics or {}
-  connection = defn.connection or null
-  schema = defn.schema or {}
-
   table = defn.table
   table = inflection.pluralize name.toLowerCase() if not table
 
   class Schema extends BaseSchema
-    @connection: connection
+    @connection: defn.connection or null
     @table: table
-    @db: db
-    @schema: schema
+    @database: defn.database or 'test'
+    @schema: defn.schema or {}
     @modelName = name
 
-  for key, value of statics
+  for key, value of (defn.statics or {})
     Schema[key] = value
 
-  for key, value of methods
+  for key, value of (defn.methods or {})
     Schema.prototype[key] = value
 
   registry[name] = Schema
