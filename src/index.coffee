@@ -17,6 +17,39 @@ applyDefaults = (schema, doc)->
       doc[name] = def
 
 
+resolveRelations = (name, schema)->
+  #console.log 'resolving schema relations', name
+
+
+makeRelProp = (obj, key, schema)->
+  # special case ref:'self'
+
+  schema = {} if not schema?
+  rel = schema.rel
+  if not rel?
+    throw new ReferenceError 'Related schema requires rel attribute'
+  min = if schema.minItems? then schema.minItems else 0
+  max = schema.maxItems
+
+  cardone = (min == 0 or min == 1) and max == 1
+  if max?
+    cardmany = max >= 2
+  else
+    cardmany = true
+
+
+  console.log 'makeRelProp', schema, cardone, cardmany
+  val = null
+
+  get: ->
+    #console.log "get #{key}, #{obj.doc}"
+    val
+  set: (v)->
+    #console.log "set #{key} to #{v}"
+    val = v
+
+
+
 exports.registry = registry = {}
 
 
@@ -32,10 +65,18 @@ exports.BaseSchema = class BaseSchema
 
   @create: (doc)->
     inst = new @
-    inst.table = @table
-    inst.database = @database
     inst.connection = @connection
+    inst.database = @database
     inst.key = null
+    inst.modelName = @modelName
+    inst.relations = @relations
+    inst.schema = @schema
+    inst.table = @table
+
+    inst.rel = rel = {}
+    for key, value of @relations
+      key = value.relatedName if value.relatedName
+      Object.defineProperty rel, key, makeRelProp(inst, key, value)
 
     applyDefaults @schema, doc
 
@@ -102,15 +143,21 @@ exports.schema = (defn)->
   if not name
     throw new TypeError 'Schema name required'
 
+  connection = defn.connection or null
+  database = defn.database or 'test'
+  modelName = name
+  relations = defn.relations or {}
+  schema = defn.schema or {}
   table = defn.table
   table = inflection.pluralize name.toLowerCase() if not table
 
   class Schema extends BaseSchema
-    @connection: defn.connection or null
+    @connection: connection
+    @database: database
+    @modelName: modelName
+    @relations: relations
+    @schema: schema
     @table: table
-    @database: defn.database or 'test'
-    @schema: defn.schema or {}
-    @modelName = name
 
   for key, value of (defn.statics or {})
     Schema[key] = value
@@ -118,6 +165,7 @@ exports.schema = (defn)->
   for key, value of (defn.methods or {})
     Schema.prototype[key] = value
 
+  resolveRelations name, Schema
   registry[name] = Schema
 
 
